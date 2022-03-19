@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.IO;
 
 public class MainManager : MonoBehaviour
 {
@@ -11,20 +12,42 @@ public class MainManager : MonoBehaviour
     public Rigidbody Ball;
 
     public Text ScoreText;
+    public Text BestScoreText;
     public GameObject GameOverText;
-    
+
     private bool m_Started = false;
-    private int m_Points;
+    public static int m_Points;
     
     private bool m_GameOver = false;
 
-    
+    //public static MainManager Instance;
+
+    /*
+    private void Awake()
+    {
+        // start of new code
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        // end of new code
+
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
+    */
+
     // Start is called before the first frame update
     void Start()
     {
+        GameManager.Instance.LoadGameSession();
+        UpdateBestScore();
+        Debug.Log("Restart");
+        
         const float step = 0.6f;
         int perLine = Mathf.FloorToInt(4.0f / step);
-        
+
         int[] pointCountArray = new [] {1,1,2,2,5,5};
         for (int i = 0; i < LineCount; ++i)
         {
@@ -55,16 +78,34 @@ public class MainManager : MonoBehaviour
         }
         else if (m_GameOver)
         {
+            
             if (Input.GetKeyDown(KeyCode.Space))
             {
+                GameManager.Instance.UpdateBestScore();
+                GameManager.Instance.SaveGameSession();
+                UpdateBestScore();
+                Debug.Log("Game Over: Save Data");
+
+                m_Points = 0;
+                GameManager.playerScore = 0;
+                ScoreText.text = $"Score : {m_Points}";
+
                 SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
             }
         }
     }
 
+    public void UpdateBestScore()
+    {
+        GameManager.playerScore = m_Points;
+
+        BestScoreText.text = "Best Score : " + GameManager.bestPlayerNameSave + " : " + GameManager.bestPlayerScoreSave.ToString();
+    }
+
     void AddPoint(int point)
     {
         m_Points += point;
+        GameManager.playerScore = m_Points;
         ScoreText.text = $"Score : {m_Points}";
     }
 
